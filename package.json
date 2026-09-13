@@ -1,0 +1,29 @@
+{
+  "name": "playspec",
+  "version": "0.1.0",
+  "description": "Lightweight Playwright-First Spec-Driven Development (SDD) toolkit",
+  "bin": {
+    "playspec": "./bin/playspec.js"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-strip-types src/cli.ts list",
+    "help": "node --experimental-strip-types src/cli.ts help"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alien35/playspec.git"
+  },
+  "keywords": [
+    "playwright",
+    "spec-driven-development",
+    "sdd",
+    "e2e",
+    "testing",
+    "ai-agents",
+    "atdd",
+    "bdd"
+  ],
+  "author": "Alexander Leon",
+  "license": "MIT"
+}
