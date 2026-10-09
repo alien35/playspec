@@ -1,4 +1,4 @@
-import { PlaySpecConfig } from '../config.ts';
+import type { PlaySpecConfig } from '../config.ts';
 import { readJsonSafe, writeJsonSafe } from '../utils/fsUtils.ts';
 
 export interface CommandDefinition {

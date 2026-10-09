@@ -7,7 +7,7 @@
   },
   "type": "module",
   "scripts": {
-    "test": "node --experimental-strip-types src/cli.ts list",
+    "test": "node --experimental-strip-types --test test/*.test.ts",
     "help": "node --experimental-strip-types src/cli.ts help"
   },
   "repository": {

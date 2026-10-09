@@ -1,6 +1,14 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 
+export interface DiagramConfig {
+  enabled: boolean;
+  apiPrefixes: string[];
+  subsystems?: Record<string, string>;
+  ignorePatterns?: string[];
+  maxInteractions?: number;
+}
+
 export interface PlaySpecConfig {
   specsDir: string;
   livingSpecsDir: string;
@@ -20,6 +28,7 @@ export interface PlaySpecConfig {
     commandsJsonPath?: string;
     defaultGroup?: string;
   };
+  diagrams: DiagramConfig;
 }
 
 export function findProjectRoot(startDir = process.cwd()): string {
@@ -94,6 +103,13 @@ export function loadConfig(customRootDir?: string): PlaySpecConfig {
         ? resolve(root, fileConfig.tui.commandsJsonPath)
         : defaultCommandsJson,
       defaultGroup: fileConfig.tui?.defaultGroup || 'E2E',
+    },
+    diagrams: {
+      enabled: fileConfig.diagrams?.enabled ?? true,
+      apiPrefixes: fileConfig.diagrams?.apiPrefixes || ['/api/', '/graphql', '/trpc/'],
+      subsystems: fileConfig.diagrams?.subsystems || {},
+      ignorePatterns: fileConfig.diagrams?.ignorePatterns || [],
+      maxInteractions: fileConfig.diagrams?.maxInteractions || 60,
     },
   };
 }

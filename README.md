@@ -16,9 +16,9 @@ Inspired by [OpenSpec](https://github.com/Fission-AI/OpenSpec), **PlaySpec** bri
 | :--- | :--- | :--- |
 | **1. Spec Definition** | Abstract Markdown prose (`SHALL` / `WHEN/THEN`) | **Dual Specification**: Markdown user stories **coupled 1:1 with executable Playwright E2E tests**, Page Objects, and Fixtures. |
 | **2. Red Phase (ATDD)** | None (prose only) | **Strict Red Gate**: Scaffolding creates a failing Playwright test representing unmet requirements *before* writing any code. |
-| **3. Verification** | Subjective inspection by AI | **Deterministic Automation**: Playwright runs in headless fast mode (`E2E_FAST=true`) or full visual mode (screenshots & traces). |
-| **4. Living Documentation** | Markdown files in `openspec/specs/` | Living specifications in `specs/features/` linking directly to passing Playwright test files. |
-| **5. Developer Tooling** | File-based only | Clean hooks for terminal runners and TUIs (e.g. `command-launcher/commands.json`). |
+| **3. Verification & Architecture** | Subjective inspection by AI | **Reality-Grounded Verification**: Tests pass deterministically and compiler emits **reality-verified Mermaid sequence diagrams** from actual execution traces. |
+| **4. Living Documentation** | Markdown files in `openspec/specs/` | Living specifications in `specs/features/` linking directly to passing Playwright test files and generated sequence diagrams. |
+| **5. Developer Tooling** | File-based only | Clean hooks for terminal runners, TUIs, and dual-stream trace collectors. |
 
 ---
 
@@ -37,10 +37,10 @@ Inspired by [OpenSpec](https://github.com/Fission-AI/OpenSpec), **PlaySpec** bri
  4. Apply         AI or developer implements backend, frontend, and DB schema
     │
     ▼
- 5. Verify        Run Playwright test in fast mode or full visual report mode
+ 5. Verify        Run Playwright test & compile reality-verified sequence diagram
     │
     ▼
- 6. Archive       Promote spec to specs/features/, update README, archive change
+ 6. Archive       Promote spec & diagram to specs/features/, update README & archive
 ```
 
 ---
@@ -89,12 +89,22 @@ npx playspec verify document-expiry --fast
 # Visual report mode (captures screenshots and traces)
 npx playspec verify document-expiry
 ```
+Upon passing, PlaySpec automatically correlates runtime causal logs and HTTP network boundaries to compile a **reality-verified Mermaid sequence diagram** into `changes/document-expiry/design.md`.
 
-### 7. Archive & Living Docs
+### 7. Inspect or Preview Sequence Diagram
+```bash
+# Preview the generated sequence diagram in terminal
+npx playspec diagram document-expiry
+
+# Export raw correlated event graph as JSON
+npx playspec diagram document-expiry --json
+```
+
+### 8. Archive & Living Docs
 ```bash
 npx playspec archive document-expiry
 ```
-Promotes the verified specification into `specs/features/document-expiry.md` and archives the change directory.
+Promotes the verified specification AND the generated reality-verified sequence diagram into `specs/features/document-expiry.md` and archives the change directory.
 
 ---
 
@@ -114,6 +124,16 @@ PlaySpec auto-detects most common project structures out of the box. You can cus
     "pagesDir": "pages",
     "fixturesDir": "fixtures",
     "configPath": "playwright.config.ts"
+  },
+  "diagrams": {
+    "enabled": true,
+    "apiPrefixes": ["/api/", "/graphql", "/trpc/"],
+    "subsystems": {
+      "OUTBOX": "Outbox Queue",
+      "SYNC": "Sync Worker",
+      "AUTH": "Auth Guard"
+    },
+    "maxInteractions": 60
   },
   "tui": {
     "commandsJsonPath": "command-launcher/commands.json",

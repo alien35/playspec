@@ -4,6 +4,19 @@ export function generateDesignMarkdown(slug: string, title: string): string {
 ## Architecture Overview
 Outline the architectural approach across the stack (frontend, backend, database).
 
+## Reality-Verified Sequence Diagram
+_This diagram is automatically compiled from dual-stream runtime traces (causal pipeline logs + network boundaries) upon running \`playspec verify ${slug}\`._
+
+<!-- PLAYSPEC:SEQUENCE_DIAGRAM:START -->
+\`\`\`mermaid
+sequenceDiagram
+  autonumber
+  actor User
+  participant UI as Application UI
+  Note over User,UI: Awaiting test verification (\`npx playspec verify ${slug}\`)
+\`\`\`
+<!-- PLAYSPEC:SEQUENCE_DIAGRAM:END -->
+
 ## Frontend Components & State (\`taskbox/\`)
 - **Route**: \`app/...\`
 - **UI Components**:

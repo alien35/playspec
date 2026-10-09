@@ -1,10 +1,12 @@
 import { spawn } from 'node:child_process';
+import { resolve } from 'node:path';
 import { loadConfig, getStatusFilePath } from '../config.ts';
 import { stripAnsi, c } from '../utils/formatting.ts';
 import { writeFileSafe } from '../utils/fsUtils.ts';
 
 export interface RunOptions {
   testFile: string;
+  slug?: string;
   fast?: boolean;
   commandId?: string;
   title?: string;
@@ -98,9 +100,12 @@ export async function runPlaywrightTest(options: RunOptions): Promise<RunResult>
   const config = loadConfig();
   const runCwd = options.cwd || config.e2e.cwd;
   const startTime = Date.now();
+  const inferredSlug = options.slug || options.testFile.replace(/\.e2e\.(ts|js)$/, '');
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     ...(options.fast ? { E2E_FAST: 'true' } : {}),
+    PLAYSPEC_SLUG: inferredSlug,
+    PLAYSPEC_PROJECT_ROOT: config.specsDir ? resolve(config.specsDir, '..') : process.cwd(),
   };
 
   const args = ['playwright', 'test'];

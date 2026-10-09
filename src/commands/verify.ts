@@ -46,6 +46,22 @@ export async function runVerify(options: VerifyOptions): Promise<void> {
       fast: !!fast,
       durationSeconds: result.durationSeconds,
     };
+
+    if (config.diagrams?.enabled !== false) {
+      const { compileSequenceDiagram } = await import('../generator/diagramService.ts');
+      const diagResult = compileSequenceDiagram(slug, config, result.rawOutput);
+      if (diagResult.success && diagResult.graph) {
+        meta.sequenceDiagram = {
+          generatedAt: new Date().toISOString(),
+          interactionCount: diagResult.graph.interactions.length,
+          participants: diagResult.graph.participants.map((p) => p.id),
+        };
+        console.log(`  ${badge('green', 'diagram generated')} Updated reality-verified sequence diagram in ${c('bold', `changes/${slug}/design.md`)} (${diagResult.graph.interactions.length} interactions)`);
+      } else {
+        console.log(`  ${badge('gray', 'diagram skipped')} ${diagResult.message || 'No runtime trace events captured.'}`);
+      }
+    }
+
     writeJsonSafe(metaPath, meta);
 
     console.log(`${badge('green', 'meta.json updated')} status: ${c('bold', 'verified')}`);
