@@ -9,10 +9,12 @@ export interface VerifyOptions {
   slug: string;
   fast?: boolean;
   headed?: boolean;
+  video?: boolean;
+  slowMo?: number;
 }
 
 export async function runVerify(options: VerifyOptions): Promise<void> {
-  const { slug, fast, headed } = options;
+  const { slug, fast, headed, video, slowMo } = options;
   const config = loadConfig();
   const changeDir = resolve(config.changesDir, slug);
   if (!existsSync(changeDir)) {
@@ -32,6 +34,8 @@ export async function runVerify(options: VerifyOptions): Promise<void> {
     testFile,
     fast,
     headed,
+    video,
+    slowMo,
     commandId,
     title: `${meta.title || slug} (Verify)`,
   });
@@ -60,6 +64,14 @@ export async function runVerify(options: VerifyOptions): Promise<void> {
       } else {
         console.log(`  ${badge('gray', 'diagram skipped')} ${diagResult.message || 'No runtime trace events captured.'}`);
       }
+    }
+
+    if (result.videoPath) {
+      meta.video = {
+        path: `changes/${slug}/recording.webm`,
+        capturedAt: new Date().toISOString(),
+      };
+      console.log(`  ${badge('green', 'video recorded')} Interactive replay video saved to ${c('bold', `changes/${slug}/recording.webm`)}`);
     }
 
     writeJsonSafe(metaPath, meta);

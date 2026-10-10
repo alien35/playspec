@@ -11,6 +11,7 @@ import { BackendApi } from '../lib/backendApi';
 import { hideDevOverlaysInBrowser } from '../lib/hideDevOverlays';
 import { resolveE2eTarget, shouldEnableRemoteE2e, type E2eTarget } from '../lib/env';
 import { PerformanceTracker } from '../lib/performanceTracker';
+import { installVirtualCursor } from '../helpers/virtualCursor';
 import { ${pascalName}Page } from '../pages/${slug}.page';
 
 export type ${pascalName}FixtureData = {
@@ -122,6 +123,10 @@ export const test = base.extend<${pascalName}Fixtures>({
     const context: BrowserContext = await browser.newContext({
       baseURL: e2eTarget.appBaseUrl,
       permissions: ['camera', 'microphone'],
+      recordVideo: (process.env.PLAYSPEC_VIDEO === 'true' || process.env.VIDEO === 'true') ? {
+        dir: path.resolve(process.cwd(), '.playspec', 'videos', '${slug}'),
+        size: { width: 1440, height: 1000 },
+      } : undefined,
     });
 
     await context.addInitScript(hideDevOverlaysInBrowser);
@@ -133,6 +138,7 @@ export const test = base.extend<${pascalName}Fixtures>({
     );
 
     const testPage = await context.newPage();
+    await installVirtualCursor(testPage);
 
     // 1. Dual-Stream Trace Collector: Network Boundary Interception
     testPage.on('request', (req) => {

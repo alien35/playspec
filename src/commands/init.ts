@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { loadConfig } from '../config.ts';
 import { ensureDir, writeFileSafe, writeJsonSafe } from '../utils/fsUtils.ts';
 import { c, printBanner, badge } from '../utils/formatting.ts';
+import { generateVirtualCursorCode } from '../templates/virtualCursorTemplate.ts';
 
 export function runInit(targetDir = process.cwd()): void {
   printBanner('PlaySpec Init', 'Setting up Playwright-First Spec-Driven Development');
@@ -19,10 +20,19 @@ export function runInit(targetDir = process.cwd()): void {
   ensureDir(config.e2e.testsDir);
   ensureDir(config.e2e.pagesDir);
   ensureDir(config.e2e.fixturesDir);
+  const helpersDir = resolve(config.e2e.dir, "helpers");
+  ensureDir(helpersDir);
 
   console.log(`   ${badge('green', 'ready')} ${config.specsDir}`);
   console.log(`   ${badge('green', 'ready')} ${config.changesDir}`);
   console.log(`   ${badge('green', 'ready')} ${config.e2e.dir}`);
+
+  // Scaffold virtual cursor helper
+  const virtualCursorPath = resolve(helpersDir, "virtualCursor.ts");
+  if (!existsSync(virtualCursorPath)) {
+    writeFileSafe(virtualCursorPath, generateVirtualCursorCode());
+    console.log(`   ${badge('green', 'created')} ${virtualCursorPath.replace(root + "/", "")}`);
+  }
 
   // Create default playspec.config.json if not present
   const configFilePath = resolve(root, 'playspec.config.json');

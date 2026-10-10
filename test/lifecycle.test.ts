@@ -1,6 +1,6 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert';
-import { mkdtempSync, rmSync, readFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { runInit } from '../src/commands/init.ts';
@@ -31,6 +31,7 @@ describe('End-to-End PlaySpec Sequence Diagram Lifecycle', () => {
     // 1. Initialize project
     runInit(tempDir);
     assert.ok(existsSync(resolve(tempDir, 'playspec.config.json')));
+    assert.ok(existsSync(resolve(tempDir, 'e2e', 'helpers', 'virtualCursor.ts')));
 
     // 2. Propose feature
     runPropose({ slug, title: 'Document Expiry Alerts' });
@@ -48,6 +49,8 @@ describe('End-to-End PlaySpec Sequence Diagram Lifecycle', () => {
     assert.ok(existsSync(fixturePath));
     const fixtureContent = readFileSync(fixturePath, 'utf-8');
     assert.ok(fixtureContent.includes('-TRACE]'));
+    assert.ok(fixtureContent.includes('installVirtualCursor'));
+    assert.ok(fixtureContent.includes('recordVideo'));
     assert.ok(fixtureContent.includes('/api/'));
 
     // 3. Simulate runtime execution trace
@@ -116,7 +119,10 @@ describe('End-to-End PlaySpec Sequence Diagram Lifecycle', () => {
     assert.ok(designUpdated.includes('POST /api/v1/documents/doc-901'));
     assert.ok(designUpdated.includes('[OUTBOX-TRACE] Complete [OK]'));
 
-    // 5. Archive feature to living specs
+    // 5. Simulate execution video artifact
+    writeFileSync(resolve(changeDir, 'recording.webm'), 'mock-video-bytes');
+
+    // 6. Archive feature to living specs
     runArchive(slug);
 
     const livingSpecPath = resolve(config.livingSpecsDir, `${slug}.md`);
@@ -125,5 +131,8 @@ describe('End-to-End PlaySpec Sequence Diagram Lifecycle', () => {
     assert.ok(livingSpecContent.includes('## Reality-Verified Sequence Diagram'));
     assert.ok(livingSpecContent.includes('sequenceDiagram'));
     assert.ok(livingSpecContent.includes('POST /api/v1/documents/doc-901'));
+    assert.ok(existsSync(resolve(config.livingSpecsDir, 'assets', `${slug}.webm`)));
+    assert.ok(livingSpecContent.includes('## Reality-Verified Video Recording'));
+    assert.ok(livingSpecContent.includes('![Feature Demo](./assets/document-expiry.webm)'));
   });
 });

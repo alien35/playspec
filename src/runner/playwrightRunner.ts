@@ -2,7 +2,8 @@ import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
 import { loadConfig, getStatusFilePath } from '../config.ts';
 import { stripAnsi, c } from '../utils/formatting.ts';
-import { writeFileSafe } from '../utils/fsUtils.ts';
+import { existsSync, readdirSync, copyFileSync } from 'node:fs';
+import { writeFileSafe, ensureDir } from '../utils/fsUtils.ts';
 
 export interface RunOptions {
   testFile: string;
@@ -11,6 +12,8 @@ export interface RunOptions {
   commandId?: string;
   title?: string;
   headed?: boolean;
+  video?: boolean;
+  slowMo?: number;
   grep?: string;
   cwd?: string;
 }
@@ -22,6 +25,7 @@ export interface RunResult {
   errorHeadline?: string;
   errorSummary?: string;
   rawOutput: string;
+  videoPath?: string;
 }
 
 export function extractErrorDetails(rawOutput: string): { headline?: string; summary?: string } {
@@ -101,6 +105,17 @@ export async function runPlaywrightTest(options: RunOptions): Promise<RunResult>
   const runCwd = options.cwd || config.e2e.cwd;
   const startTime = Date.now();
   const inferredSlug = options.slug || options.testFile.replace(/\.e2e\.(ts|js)$/, '');
+  if (options.video) {
+    process.env.VIDEO = 'true';
+    process.env.PLAYSPEC_VIDEO = 'true';
+    process.env.RECORD_VIDEO = 'true';
+    if (!process.env.SLOW_MO) {
+      process.env.SLOW_MO = String(options.slowMo || 150);
+    }
+  } else if (options.slowMo) {
+    process.env.SLOW_MO = String(options.slowMo);
+  }
+
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     ...(options.fast ? { E2E_FAST: 'true' } : {}),
@@ -170,6 +185,53 @@ export async function runPlaywrightTest(options: RunOptions): Promise<RunResult>
         );
       }
 
+      let capturedVideoPath: string | undefined;
+      if (options.video || env.PLAYSPEC_VIDEO === 'true' || env.VIDEO === 'true') {
+        try {
+          const videoSearchDirs = [
+            resolve(runCwd, '.playspec', 'videos', inferredSlug),
+            resolve(process.cwd(), '.playspec', 'videos', inferredSlug),
+            resolve(runCwd, 'test-results'),
+            resolve(process.cwd(), 'test-results'),
+          ];
+
+          for (const searchDir of videoSearchDirs) {
+            if (existsSync(searchDir)) {
+              const findWebm = (dir: string): string | null => {
+                const entries = readdirSync(dir, { withFileTypes: true });
+                for (const entry of entries) {
+                  const full = resolve(dir, entry.name);
+                  if (entry.isDirectory()) {
+                    const found = findWebm(full);
+                    if (found) return found;
+                  } else if (entry.isFile() && entry.name.endsWith('.webm')) {
+                    return full;
+                  }
+                }
+                return null;
+              };
+
+              const found = findWebm(searchDir);
+              if (found) {
+                const targetPlayspecVideoDir = resolve(process.cwd(), '.playspec', 'videos');
+                ensureDir(targetPlayspecVideoDir);
+                const playspecVideoPath = resolve(targetPlayspecVideoDir, `${inferredSlug}.webm`);
+                copyFileSync(found, playspecVideoPath);
+
+                const changeDir = resolve(config.changesDir, inferredSlug);
+                if (existsSync(changeDir)) {
+                  const changeVideoPath = resolve(changeDir, 'recording.webm');
+                  copyFileSync(found, changeVideoPath);
+                }
+
+                capturedVideoPath = playspecVideoPath;
+                break;
+              }
+            }
+          }
+        } catch {}
+      }
+
       resolvePromise({
         success,
         exitCode: code,
@@ -177,6 +239,7 @@ export async function runPlaywrightTest(options: RunOptions): Promise<RunResult>
         errorHeadline: headline,
         errorSummary: summary,
         rawOutput: outputBuffer,
+        videoPath: capturedVideoPath,
       });
     };
 

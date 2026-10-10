@@ -91,6 +91,19 @@ npx playspec verify document-expiry
 ```
 Upon passing, PlaySpec automatically correlates runtime causal logs and HTTP network boundaries to compile a **reality-verified Mermaid sequence diagram** into `changes/document-expiry/design.md`.
 
+### 6b. Video Recording with Virtual Cursor Overlay
+PlaySpec fixtures automatically scaffold a high-visibility virtual cursor overlay with animated click ripples and drag reticles.
+
+To capture a high-definition video of the user journey in action:
+```bash
+# Record execution video with visual cursor telemetry
+npx playspec verify document-expiry --video
+
+# Customize slow-motion pacing (in ms)
+npx playspec verify document-expiry --video --slow-mo 200
+```
+The video artifact is saved to `changes/document-expiry/recording.webm`. When you run `npx playspec archive`, it is automatically promoted to `specs/features/assets/` and embedded into the living specification.
+
 ### 7. Inspect or Preview Sequence Diagram
 ```bash
 # Preview the generated sequence diagram in terminal

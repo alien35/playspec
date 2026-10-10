@@ -10,6 +10,7 @@ import { generateTasksMarkdown } from '../templates/tasksTemplate.ts';
 import { generateTestCode } from '../templates/testTemplate.ts';
 import { generatePageCode } from '../templates/pageTemplate.ts';
 import { generateFixtureCode } from '../templates/fixtureTemplate.ts';
+import { generateVirtualCursorCode } from '../templates/virtualCursorTemplate.ts';
 import { registerPackageJsonScripts } from '../integrations/packageJson.ts';
 import { registerCommandLauncherCard } from '../integrations/commandLauncher.ts';
 
@@ -70,6 +71,15 @@ export function runPropose(options: ProposeOptions): void {
   };
   writeJsonSafe(resolve(changeDir, 'meta.json'), meta);
   console.log(`   ${badge('green', 'created')} meta.json`);
+
+  // Ensure virtual cursor helper is present
+  const helpersDir = resolve(config.e2e.dir, 'helpers');
+  ensureDir(helpersDir);
+  const virtualCursorPath = resolve(helpersDir, 'virtualCursor.ts');
+  if (!existsSync(virtualCursorPath)) {
+    writeFileSafe(virtualCursorPath, generateVirtualCursorCode());
+    console.log(`   ${badge('green', 'created')} ${virtualCursorPath.replace(process.cwd() + '/', '')}`);
+  }
 
   // 2. Scaffold Playwright E2E files
   console.log(`\n${c('cyan', '2.')} Scaffolding Playwright E2E suite...`);

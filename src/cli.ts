@@ -33,6 +33,8 @@ function printHelp(): void {
   console.log(`  --group <group>              Command Launcher TUI group (e.g. RON, Workspace, Misc)`);
   console.log(`  --fast                       Run in fast headless mode skipping screenshots (used with verify)`);
   console.log(`  --headed                     Run with visible browser window (used with verify)`);
+  console.log(`  --video                      Record high-definition test execution video with virtual cursor`);
+  console.log(`  --slow-mo <ms>               Slow motion delay between actions in ms (e.g. 150)`);
   console.log(`  --json                       Output correlated trace graph as JSON (used with diagram)\n`);
 
   console.log(`${c('bold', 'EXAMPLES:')}`);
@@ -116,7 +118,10 @@ async function main(): Promise<void> {
       }
       const fast = hasFlag('--fast');
       const headed = hasFlag('--headed');
-      await runVerify({ slug, fast, headed });
+      const video = hasFlag('--video');
+      const slowMoVal = getFlagValue('--slow-mo');
+      const slowMo = slowMoVal ? parseInt(slowMoVal, 10) : undefined;
+      await runVerify({ slug, fast, headed, video, slowMo });
       break;
     }
 
